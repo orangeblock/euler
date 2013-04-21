@@ -1,7 +1,7 @@
 # http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
 def is_prime(num, repeat=5):
-    if num <= 1 or num % 2 == 0: return False        
     if num == 2 or num == 3: return True
+    if num <= 1 or num % 2 == 0: return False        
 
     s, d = 0, num-1
     while d % 2 == 0:
