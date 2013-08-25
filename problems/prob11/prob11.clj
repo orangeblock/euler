@@ -8,28 +8,27 @@
   (vec (map #(strings-to-ints (split % #" "))
             (split-lines (slurp "grid.txt")))))
 
-(defn row-products [grid x y]
-  (for [r (range x (+ x 4))]
-    (apply * (->> (get grid r) (drop y) (take 4)))))
-
-(defn col-products [grid x y]
-  (for [c (range y (+ y 4))]
-    (apply * (->> (map #(nth % c) grid) (drop x) (take 4)))))
-
 (defn diag-products [grid x y]
-  (list
-   (* (get-in grid [x y]) (get-in grid [(+ x 1) (+ y 1)]) (get-in grid [(+ x 2) (+ y 2)]) (get-in grid [(+ x 3) (+ y 3)]))
-   (* (get-in grid [(+ x 3) y]) (get-in grid [(+ x 2) (+ y 1)]) (get-in grid [(+ x 1) (+ y 2)]) (get-in grid [x (+ y 3)]))))
+  "Return the main and secondary diagonals of the 4x4 matrix with (x,y) as top left corner."
+  (let [cell #((grid %1) %2)] ;cell accessor function
+    (list
+     (reduce * [(cell x y) (cell (+ x 1) (+ y 1)) (cell (+ x 2) (+ y 2)) (cell (+ x 3) (+ y 3))])
+     (reduce * [(cell (+ x 3) y) (cell (+ x 2) (+ y 1)) (cell (+ x 1) (+ y 2)) (cell x (+ y 3))]))))
 
 (defn matrix-products [grid x y]
-  "Return all the 4-element products in the 4x4 matrix with (x,y) as top-left corner."
-  (concat
-   (row-products grid x y)
-   (col-products grid x y)
-   (diag-products grid x y)))
+  "Return all the possible, non-redundant 4-element products of the 4x4 matrix with (x,y) as top-left corner."
+  (let [limit (- (count grid) 4)]
+    (concat
+     (if (<= y limit)
+       (list (apply * (->> (grid x) (drop y) (take 4))))) ; add row product
+     (if (<= x limit)
+       (list (apply * (->> (map #(nth % y) grid) (drop x) (take 4))))) ; add col product
+     (if (and (<= y limit) (<= x limit))
+       (diag-products grid x y)))))
 
 (defn max-product [grid]
-  (let [num-range (range (- (count grid) 4))]
+  "Calculate the products starting from each cell of the matrix"
+  (let [num-range (range (count grid))]
     (->> (for [x num-range y num-range] (matrix-products grid x y))
          (apply concat)
          (apply max))))
